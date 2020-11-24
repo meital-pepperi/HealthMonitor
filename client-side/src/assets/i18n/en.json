@@ -1,0 +1,11 @@
+{
+    "Components_Example_Title": "@pep-addons/ngx-lib : Pepperi Components - Library components written with Angular10",
+    "List_Example_Title": "Pep list example",
+    "Health_Monitor_Settings_Title": "Health Monitor Settings",
+    "Health_Monitor_Settings_Description":"Define the alert settings",
+    "Health_Monitor_Settings_Alerts":"Alerts",
+    "Health_Monitor_Settings_Dashboard": "Health Monitor Dashboard",
+    "Edit_Alert_Title":"Edit Alert",
+    "Edit_Alert_Back":"Back",
+    "Edit_Alert_Save":"Save"
+}

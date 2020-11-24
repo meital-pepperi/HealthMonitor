@@ -1,0 +1,50 @@
+<!-- <main> -->
+    <div class="plugin-page-container">
+        <div class="header-content full-screen">
+            <div class="content pep-border-bottom">
+                <div class="left-container spacing-element-negative pull-left flip">
+                    <div class="spacing-element title">
+                        {{ 'Health_Monitor_Settings_Dashboard' | translate }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main-content ">
+            <div class="content column1">
+
+                <div class="child1">
+                    <p>Last Sync</p>
+                    <p class="value" [ngStyle]="{'color': dashboardData.LastSync.Color}">{{dashboardData.LastSync.Time}} </p>
+                </div>
+
+                <div class="child2">
+                    <p>Job Time Usage</p>
+                    <p class="value" [ngStyle]="{'color': dashboardData.JobTimeUsage.Color}">{{dashboardData.JobTimeUsage.Percantage}}%</p>
+                </div>
+
+                <div class="child3">
+                    <p>Pending Actions</p>
+                    <p class="value">{{dashboardData.PendingActions.Count}}</p>
+                </div>
+            </div>
+            <div class="content column2">
+                <div class="child1">
+                    <p>Sync Status</p>
+                    <canvas id="syncStatus"></canvas>
+                </div>
+
+                <div class="child2">
+                    <p>Daily Sync</p>
+                    <canvas id="dailySync"></canvas>
+                </div>
+            </div>
+            <div class="content column3">
+
+                <div class="child1">
+                    <p>Alerts</p>
+                    <p class="value">{{dashboardData.Alerts}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
