@@ -12,39 +12,37 @@
         <div class="main-content ">
             <div class="content column1">
 
-                <div class="child1">
-                    <p>Last Sync</p>
+                <div class="child1 chart-background">
+                    <p>Last Sync - {{dashboardData.LastSync.StatusName}}</p>
                     <p class="value" [ngStyle]="{'color': dashboardData.LastSync.Color}">{{dashboardData.LastSync.Time}} </p>
                 </div>
 
-                <div class="child2">
+                <div class="child2 chart-background">
                     <p>Job Time Usage</p>
                     <p class="value" [ngStyle]="{'color': dashboardData.JobTimeUsage.Color}">{{dashboardData.JobTimeUsage.Percantage}}%</p>
                 </div>
 
-                <div class="child3">
+                <div class="child3 chart-background">
                     <p>Pending Actions</p>
-                    <p class="value">{{dashboardData.PendingActions.Count}}</p>
+                    <p class="value" [ngStyle]="{'color': 'rgba(75, 192, 192, 1)'}">{{dashboardData.PendingActions.Count}}</p>
                 </div>
             </div>
             <div class="content column2">
-                <div class="child1">
+                <div class="child1 chart-background">
                     <p>Sync Status</p>
                     <canvas id="syncStatus"></canvas>
                 </div>
 
-                <div class="child2">
+                <div class="child2 chart-background">
                     <p>Daily Sync</p>
                     <canvas id="dailySync"></canvas>
                 </div>
             </div>
-            <div class="content column3">
+<!--             <div class="content column3">
 
                 <div class="child1">
-                    <p>Alerts</p>
-                    <p class="value">{{dashboardData.Alerts}}</p>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
     

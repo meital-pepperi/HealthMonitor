@@ -98,6 +98,7 @@ export class PepperiHealthMonitorDashboardComponent implements OnInit {
       }
     });
 
+    this.dashboardData.LastSync.StatusName = this.dashboardData.LastSync.Status? 'Success' : 'Failure';
     this.dashboardData.LastSync.Color = this.dashboardData.LastSync.Status? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)';
     this.dashboardData.JobTimeUsage.Color = this.dashboardData.JobTimeUsage.Percantage <80 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)';
   }

@@ -65,7 +65,7 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
     else {
       const popupMessage = await this.appService.postAddonServerAPI('api',action.key,{Type:typeID},{});
       const eventName = action.value;
-      this.appService.openDialog(eventName,popupMessage)
+      this.appService.openDialog("Info",popupMessage)
     }
   }
 

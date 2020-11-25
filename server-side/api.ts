@@ -289,7 +289,7 @@ export async function health_monitor_dashboard(client: Client, request: Request)
 
         const lastSyncResult = await service.papiClient.get("/audit_logs?fields=Status.ID,ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName ='sync'&page_size=1&order_by=ModificationDateTime desc");
         const lastSyncTime = new Date(lastSyncResult[0]["ModificationDateTime"]);
-        const time = lastSyncTime.getHours().toString()+":"+lastSyncTime.getMinutes().toString();
+        const time = lastSyncTime.toTimeString().split(" ")[0]; 
         result.LastSync = {Time:time, Status:lastSyncResult[0]["Status.ID"]};
     
         const lastDay = new Date(Date.now() - 86400 * 1000);
@@ -319,6 +319,7 @@ export async function health_monitor_dashboard(client: Client, request: Request)
             }
             else{
                 successData.push(success);
+                success =0;
                 i= i-1;
                 label = label+1;
             }
@@ -341,6 +342,7 @@ export async function health_monitor_dashboard(client: Client, request: Request)
             }
             else{
                 failureData.push(failure);
+                failure =0;
                 i= i-1;
                 label = label+1;
             }
@@ -354,10 +356,20 @@ export async function health_monitor_dashboard(client: Client, request: Request)
             }
         }
 
-        result.DailySync = {Labels: labels , Success: successData, Failure: failureData}; //the success and failures mapped by quantity on which hour
-        result.Alerts = {Alerts:[]}; // list of last 30 days alerts of ____
+        //fix UI of labels
+        for (var j in labels){
+            if (labels[j].length==1){
+                labels[j]= "0"+labels[j]+":00"
+            }
+            else{
+                labels[j]= labels[j]+":00"
+            }
+        }
+
+        result.DailySync = {Labels: labels , Success: successData, Failure: failureData};
     
-        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName ='sync' and Status.ID=2");
+        //there are logs stuck on in progress, maybe show one month back
+        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=2");
         result.PendingActions = {Count: pendingActionsResult.length};
     
         const jobTimeUsageResult = await service.papiClient.get('/code_jobs/execution_budget');

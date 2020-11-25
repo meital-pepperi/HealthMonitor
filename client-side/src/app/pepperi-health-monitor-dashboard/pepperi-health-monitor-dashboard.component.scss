@@ -2,9 +2,9 @@
     //   padding-top: .5rem;
     .content.column1 {
         display: grid;
-        grid-template-columns: 25% 25% 25%;
+        grid-template-columns: 15% 15% 15%;
         grid-template-rows: 100px;
-        gap: 1px 60px;
+        gap: 30px 30px;
         grid-template-areas: "child1 child2 child3";
         .child1 { grid-area: child1; }
 
@@ -21,7 +21,7 @@
         display: grid;
         grid-template-columns: 25% 50%;
         grid-template-rows: 350px;
-        gap: 1px 60px;
+        gap: 30px 30px;
         grid-template-areas: "child1 child2";
         .child1 { 
             grid-area: child1;
@@ -43,7 +43,7 @@
         display: grid;
         grid-template-columns: 25%;
         grid-template-rows: 300px;
-        gap: 1px 60px;
+        gap: 30px 30px;
         grid-template-areas: "child1";
         .child1 { grid-area: child1; 
         }
@@ -57,4 +57,12 @@ canvas {
 p{
     text-align: center;
     margin: 10px 0px;
+}
+
+.chart-background{
+    background: rgb(255, 255, 255);
+    box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.05),
+    0px 8px 16px 0px rgba(0, 0, 0, 0.04),
+    0px 12px 24px 0px rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
 }
