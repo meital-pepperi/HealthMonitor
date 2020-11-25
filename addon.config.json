@@ -1,6 +1,6 @@
 {
   "AddonUUID": "7e15d4cc-55a7-4128-a9fe-0e877ba90069",
-  "AddonVersion": "0.0.12",
+  "AddonVersion": "0.0.13",
   "DebugPort": 4400,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "editor",
@@ -16,10 +16,20 @@
     "he.json"
   ],
   "PublishConfig": {
-    "Editors": [],
+    "Editors": [
+      {
+        "ParentPackageName": "Health Monitor",
+        "PackageName": "health-monitor-settings",
+        "Description": "Health Monitor Settings"
+      },
+      {
+        "ParentPackageName": "Health Monitor",
+        "PackageName": "health-monitor-dashboard",
+        "Description": "Health Monitor Dashboard"
+      }
+    ],
     "Dependencies": {
-      "papi": "9.5.342",
-      "webapp": "16.50.61"
+      "webapp": "16.55.42"
     }
   }
 }

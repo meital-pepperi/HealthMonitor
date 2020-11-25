@@ -82,7 +82,7 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
       if (this.customList && tests) {
           const tableData = new Array<PepRowData>();
           tests.forEach((test: any) => {
-              const allKeys = ['Type', 'Email', 'Webhook'];
+              const allKeys = ['Type', 'Webhook'];//['Type', 'Email', 'Webhook'];
               tableData.push(this.convertTestToPepRowData(test, allKeys));
           });
           const pepperiListObj = this.dataConvertorService.convertListData(tableData);
