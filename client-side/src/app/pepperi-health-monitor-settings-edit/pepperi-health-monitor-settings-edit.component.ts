@@ -18,26 +18,33 @@ export class PepperiHealthMonitorSettingsEditComponent implements OnInit {
     private translate: TranslateService,
     private appService: AppService) { }
 
-  async ngOnInit() {
+  ngOnInit() {
     let params = (new URL(window.location.href)).searchParams;
     this.type = params.get("Type");
     this.isSupport = params.get("support_user")==null? false: (params.get("support_user")=="true");
-    this.typeData = await this.appService.postAddonServerAPI('api','health_monitor_type_alert_edit',{Type:this.type},{});
+    this.appService.postAddonServerAPI('api','health_monitor_type_alert_edit',{Type:this.type},{})
+    .subscribe((result: any) => {
+      this.typeData = result;
+    });
   }
 
   onBack() {
     window.location.href =window.location.origin + '/settings/7e15d4cc-55a7-4128-a9fe-0e877ba90069/health-monitor-settings';
   }
 
-  async onSave() {
+  onSave() {
     this.typeData.Type = this.type;
-    const response = await this.appService.postAddonServerAPI('api','health_monitor_type_alert_save',this.typeData,{});
-    if (response.Success){
-      window.location.href =window.location.origin + '/settings/7e15d4cc-55a7-4128-a9fe-0e877ba90069/health-monitor-settings';
-    }
-    else{
-      this.appService.openDialog("Error",response.ErrorMessage)
-    }
+     this.appService.postAddonServerAPI('api','health_monitor_type_alert_save',this.typeData,{})
+    .subscribe((result: any) => {
+      const response =result;
+      if (response.Success){
+        window.location.href =window.location.origin + '/settings/7e15d4cc-55a7-4128-a9fe-0e877ba90069/health-monitor-settings';
+      }
+      else{
+        this.appService.openDialog("Error",response.ErrorMessage)
+      }
+    });
+    
   }
 
   onValueChanged(event: PepFieldValueChangedData) {

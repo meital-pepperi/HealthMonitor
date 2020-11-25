@@ -9,40 +9,35 @@
                 </div>
             </div>
         </div>
-        <div class="main-content ">
-            <div class="content column1">
-
-                <div class="child1 chart-background">
-                    <p>Last Sync - {{dashboardData.LastSync.StatusName}}</p>
-                    <p class="value" [ngStyle]="{'color': dashboardData.LastSync.Color}">{{dashboardData.LastSync.Time}} </p>
+        <div class="main-content">
+            <div class="rows" [ngStyle]="{ visibility: dashboardData ? 'visible':'hidden'}">
+                <div class="content row">
+                    <div class="info-chart chart-background">
+                        <p class="desc color-dimmed">Last Sync - {{ dashboardData?.LastSync?.StatusName}}</p>
+                        <p class="value bold" >{{dashboardData?.LastSync?.Time}} </p>
+                    </div>
+    
+                    <div class="info-chart chart-background">
+                        <p class="desc color-dimmed">Job Time Usage</p>
+                        <p class="value bold" >{{dashboardData?.JobTimeUsage?.Percantage}}%</p>
+                    </div>
+    
+                    <div class="info-chart chart-background">
+                        <p class="desc color-dimmed">Pending Actions</p>
+                        <p class="value bold">{{dashboardData?.PendingActions?.Count}}</p>
+                    </div>
                 </div>
-
-                <div class="child2 chart-background">
-                    <p>Job Time Usage</p>
-                    <p class="value" [ngStyle]="{'color': dashboardData.JobTimeUsage.Color}">{{dashboardData.JobTimeUsage.Percantage}}%</p>
-                </div>
-
-                <div class="child3 chart-background">
-                    <p>Pending Actions</p>
-                    <p class="value" [ngStyle]="{'color': 'rgba(75, 192, 192, 1)'}">{{dashboardData.PendingActions.Count}}</p>
+                <div class="content row">
+                    <div class="chart chart-background">
+                        <p class="pep-border-bottom">Sync Status</p>
+                        <canvas #syncStatus id="syncStatus"></canvas>
+                    </div>
+                    <div class="chart chart-background">
+                        <p class="pep-border-bottom">Daily Sync</p>
+                        <canvas #dailySync id="dailySync"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="content column2">
-                <div class="child1 chart-background">
-                    <p>Sync Status</p>
-                    <canvas id="syncStatus"></canvas>
-                </div>
-
-                <div class="child2 chart-background">
-                    <p>Daily Sync</p>
-                    <canvas id="dailySync"></canvas>
-                </div>
-            </div>
-<!--             <div class="content column3">
-
-                <div class="child1">
-                </div>
-            </div> -->
         </div>
     </div>
     

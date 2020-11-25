@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CustomizationService, PepStyleType } from '@pepperi-addons/ngx-lib';
+import { CustomizationService, LoaderService, PepStyleType } from '@pepperi-addons/ngx-lib';
 
 @Component({
     selector: 'addon-root',
@@ -12,7 +12,15 @@ export class AppComponent implements OnInit {
 
     showLoading = false;
 
-    constructor(public customizationService: CustomizationService) {
+    constructor(
+        public customizationService: CustomizationService,
+        public loaderService: LoaderService) {
+
+
+        this.loaderService.onChanged$
+            .subscribe((show) => {
+                this.showLoading = show;
+            });
     } 
 
     ngOnInit() {

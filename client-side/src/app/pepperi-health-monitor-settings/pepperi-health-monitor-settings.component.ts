@@ -54,7 +54,7 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
 
   }
 
-  async onMenuItemClicked(action) {
+  onMenuItemClicked(action) {
     const typeListID = this.customList.getSelectedItemsData().rows[0];
     const typeData = this.customList.getItemDataByID(typeListID.toString());
     var typeID = typeData.Fields[0].AdditionalValue;
@@ -63,9 +63,12 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
       window.location.href =window.location.origin + `/settings/7e15d4cc-55a7-4128-a9fe-0e877ba90069/health-monitor-settings-edit?Type=`+typeID;
     }
     else {
-      const popupMessage = await this.appService.postAddonServerAPI('api',action.key,{Type:typeID},{});
-      const eventName = action.value;
-      this.appService.openDialog("Info",popupMessage)
+      this.appService.postAddonServerAPI('api',action.key,{Type:typeID},{})
+        .subscribe((result: any) => {
+        const popupMessage = result;
+        const eventName = action.value;
+        this.appService.openDialog("Info",popupMessage);
+      });
     }
   }
 
@@ -73,9 +76,12 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
       this.loadlist('all');
   }
 
-  async loadlist(apiEndpoint) {
-      this.tests = await this.appService.getAddonServerAPI('api','health_monitor_settings',{});
-      this.loadAddons(this.tests);
+  loadlist(apiEndpoint) {
+      this.appService.getAddonServerAPI('api','health_monitor_settings',{})
+      .subscribe((result: any) => {
+        this.tests =  result;
+        this.loadAddons(this.tests);
+      });
   }
 
   loadAddons(tests) {
@@ -124,14 +130,14 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
       switch (key) {
 
           case 'Type':
-              dataRowField.ColumnWidth = 30;
+              dataRowField.ColumnWidth = 13;
               dataRowField.AdditionalValue= test["ID"] ? test["ID"].toString() : '';
               break;
           case 'Email':
               dataRowField.ColumnWidth = 50;
               break;
           case 'Webhook':
-              dataRowField.ColumnWidth = 45;
+              dataRowField.ColumnWidth = 60;
               break;
           default:
               dataRowField.ColumnWidth = 0;
