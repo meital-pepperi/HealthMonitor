@@ -373,7 +373,7 @@ export async function health_monitor_dashboard(client: Client, request: Request)
         result.PendingActions = {Count: pendingActionsResult.length};
     
         const jobTimeUsageResult = await service.papiClient.get('/code_jobs/execution_budget');
-        const currentPercantage = jobTimeUsageResult.UsedBudget/(jobTimeUsageResult.UsedBudget +jobTimeUsageResult.FreeBudget);
+        const currentPercantage = parseFloat((jobTimeUsageResult.UsedBudget/(jobTimeUsageResult.UsedBudget +jobTimeUsageResult.FreeBudget)).toFixed(2));
         result.JobTimeUsage = {Percantage: currentPercantage };
     
         return result;
@@ -614,7 +614,7 @@ export async function JobLimitReachedTest(service) {
         const additionalData = JSON.parse(addon.AdditionalData);
         lastPercantage = additionalData.JobLimitReached.LastPercantage;
 
-        currentPercantage = result.UsedBudget/(result.UsedBudget +result.FreeBudget);
+        currentPercantage = parseFloat((result.UsedBudget/(result.UsedBudget +result.FreeBudget)).toFixed(2));
         innerMessage ="You have reached " + currentPercantage +"% of your job limits.";
         switch (currentPercantage){
             case 80-90:
