@@ -369,8 +369,11 @@ export async function health_monitor_dashboard(client: Client, request: Request)
         result.DailySync = {Labels: labels , Success: successData, Failure: failureData};
     
         //there are logs stuck on in progress, maybe show one month back
-        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=2");
-        result.PendingActions = {Count: pendingActionsResult.length};
+        const today = new Date(Date.now());
+        const lastMonth = new Date(today.setMonth(today.getMonth()-1));
+        const lastMonthString = lastMonth.toISOString();
+        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=UUID,CreationDateTime,ModificationDateTime,Event.User.Email&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=2 and ModificationDateTime>'"+lastMonthString+"'&page_size=1000&order_by=ModificationDateTime desc");
+        result.PendingActions = {Count: pendingActionsResult.length, List: JSON.stringify(pendingActionsResult)};
     
         const jobTimeUsageResult = await service.papiClient.get('/code_jobs/execution_budget');
         const currentPercantage = parseFloat((jobTimeUsageResult.UsedBudget/(jobTimeUsageResult.UsedBudget +jobTimeUsageResult.FreeBudget)).toFixed(2));

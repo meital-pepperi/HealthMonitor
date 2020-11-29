@@ -1,6 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { PepFieldClickedData, PepFieldValueChangedData } from '@pepperi-addons/ngx-lib';
+import { PepListComponent, ChangeSortingEvent } from '@pepperi-addons/ngx-lib/list';
+import { CustomizationService, HttpService, ObjectSingleData, DataConvertorService,
+  PepRowData, PepFieldData, AddonService, FIELD_TYPE, UtilitiesService } from '@pepperi-addons/ngx-lib';
 import { AppService } from "../app.service";
 import { Chart } from "chart.js";
 
@@ -13,19 +15,22 @@ export class PepperiHealthMonitorDashboardComponent implements OnInit {
   dashboardData;
   ctxSyncStatus: any;
   ctxDailySync: any;
+  tabID = 0;
 
   @ViewChild ('syncStatus') canvasSyncStatus: ElementRef;
   @ViewChild ('dailySync') canvasDailySync: ElementRef;
-
+  @ViewChild(PepListComponent) customList: PepListComponent;
 
   constructor(private translate: TranslateService,
-    private appService: AppService) { }
+    private appService: AppService,
+    private dataConvertorService: DataConvertorService) { }
 
   ngOnInit() {
     this.appService.getAddonServerAPI('api','health_monitor_dashboard',{})
       .subscribe((result: any) => {
       this.dashboardData = result;
       this.loadData();
+      this.loadList();
     });
   }
 
@@ -107,4 +112,89 @@ export class PepperiHealthMonitorDashboardComponent implements OnInit {
       this.dashboardData.LastSync.Color = this.dashboardData.LastSync.Status? 'inherit' : 'rgba(255, 89, 90, 1)'; 
       this.dashboardData.JobTimeUsage.Color = this.dashboardData.JobTimeUsage.Percantage <80 ? 'inherit' : 'rgba(255, 89, 90, 1)';
     }
+
+  loadList() {
+    const actionsList = this.dashboardData.PendingActions.List;
+    this.loadAddons(actionsList);
+  }
+
+  loadAddons(pendingActions) {
+      if (this.customList && pendingActions) {
+          const tableData = new Array<PepRowData>();
+          pendingActions.forEach((action: any) => {
+              const allKeys = ['UUID','CreationDateTime', 'ModificationDateTime', 'Event.User.Email'];
+              tableData.push(this.convertTestToPepRowData(action, allKeys));
+          });
+          const pepperiListObj = this.dataConvertorService.convertListData(tableData);
+          const buffer = [];
+          if (pepperiListObj.Rows) {
+              pepperiListObj.Rows.forEach( row => {
+                  const osd = new ObjectSingleData(pepperiListObj.UIControl, row);
+                  osd.IsEditable = true;
+                  buffer.push(osd);
+              });
+          }
+
+          this.customList.initListData(pepperiListObj.UIControl, buffer.length, buffer, 'table', '', true);
+      }
+  }
+
+  convertTestToPepRowData(action: any, customKeys = null) {
+      const row = new PepRowData();
+      row.Fields = [];
+      const keys = customKeys ? customKeys : Object.keys(action);
+      keys.forEach(key => row.Fields.push(this.initDataRowField(action, key)));
+      return row;
+  }
+
+  initDataRowField(action: any, key: any): PepFieldData {
+
+      const dataRowField: PepFieldData = {
+          ApiName: key,
+          Title: this.translate.instant(key),
+          XAlignment: 1,
+          FormattedValue: action[key] ? action[key].toString() : '',
+          Value:  action[key] ? action[key].toString() : '',
+          ColumnWidth: 10,
+          AdditionalValue: '',
+          OptionalValues: [],
+          FieldType: FIELD_TYPE.TextBox
+      };
+
+      switch (key) {
+
+          case 'UUID':
+            dataRowField.ColumnWidth = 30;
+            break;
+          case 'CreationDateTime':
+            dataRowField.Title = "Creation Date Time";
+            dataRowField.ColumnWidth = 30;
+            break;
+          case 'ModificationDateTime':
+            dataRowField.Title = "Modification Date Time";
+            dataRowField.ColumnWidth = 30;
+            break;
+          case 'Event.User.Email':
+            dataRowField.Title = "User Email";
+            dataRowField.ColumnWidth = 30;
+            break;
+          default:
+            dataRowField.ColumnWidth = 0;
+            break;
+      }
+
+      return dataRowField;
+  }
+
+  tabClick(event){
+    window.dispatchEvent(new Event("resize"));
+    this.tabID = event.index;
+  }
+
+  onListChange(event) {
+  }
+
+  onCustomizeFieldClick(event) {
+  }
+
 }
