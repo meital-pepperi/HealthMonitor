@@ -114,7 +114,7 @@ export class PepperiHealthMonitorDashboardComponent implements OnInit {
     }
 
   loadList() {
-    const actionsList = this.dashboardData.PendingActions.List;
+    const actionsList = JSON.parse(this.dashboardData.PendingActions.List);
     this.loadAddons(actionsList);
   }
 
