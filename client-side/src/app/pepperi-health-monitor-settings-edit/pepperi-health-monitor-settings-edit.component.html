@@ -25,7 +25,7 @@
                     [value]="typeData.Email" (valueChanged)="onValueChanged($event)">
                 </pep-textbox> -->
                 <pep-textbox [key]="'Webhook'" [label]="'Call webhook'" [placeholder]="'place holder'" [xAlignment]="'left'"
-                    [value]="typeData.Webhook" (valueChanged)="onValueChanged($event)">
+                    [value]="typeData.Webhook" (valueChange)="onValueChanged($event)">
                 </pep-textbox>
                 <pep-select  *ngIf="isSupport" [key]="'Interval'" [label]="'Check interval'" [value]="typeData.Interval" [xAlignment]="'left'"
                     [options]='[
@@ -38,11 +38,10 @@
                     { "Key": 7200000, "Value": "2 hours" },
                     { "Key": 10800000, "Value": "3 hours" },
                     { "Key": 14400000, "Value": "4 hours" },
-                    { "Key": 18000000, "Value": "5 hours" },
                     { "Key": 21600000, "Value": "6 hours" },
                     { "Key": 43200000, "Value": "12 hours" },
                     { "Key": 86400000, "Value": "24 hours" }
-                    ]' (valueChanged)="onValueChanged($event)">
+                    ]' (valueChange)="onValueChanged($event)">
                 </pep-select>
             </div>
         </div>

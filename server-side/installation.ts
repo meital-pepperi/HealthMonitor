@@ -241,8 +241,8 @@ async function GetCodeJobUUID(papiClient, addonUUID, CodeJobTestName) {
 
 function GetMonitorCronExpression(token, maintenanceWindowHour){
     // rand is integet between 0-4 included.
-    const rand = (jwtDecode(token)['pepperi.distributorid'])%5;
-    const minute = rand +"-59/5";
+    const rand = (jwtDecode(token)['pepperi.distributorid'])%60;
+    const minute = rand +"-59/60";
     let hour = '';
 
     // monitor will be disabled from 3 hours, starting one hour before maintenance window and finished one hour after

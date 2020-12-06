@@ -57,9 +57,9 @@
                         [selectionTypeForActions]="'single'"
                         [noDataFoundMsg]="'No data'"
                         [parentScroll]="listContainer"
-                        (notifyListChanged)="onListChange($event)"
-                        (notifyFieldClicked)="onCustomizeFieldClick($event)"
-                        (notifySelectedItemsChanged)="selectedRowsChanged($event)">
+                        (listChange)="onListChange($event)"
+                        (fieldClick)="onCustomizeFieldClick($event)"
+                        (selectedItemsChange)="selectedRowsChanged($event)">
                     </pep-list>
                 </div>
     

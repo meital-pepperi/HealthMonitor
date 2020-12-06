@@ -122,7 +122,7 @@ export class PepperiHealthMonitorDashboardComponent implements OnInit {
       if (this.customList && pendingActions) {
           const tableData = new Array<PepRowData>();
           pendingActions.forEach((action: any) => {
-              const allKeys = ['UUID','CreationDateTime', 'ModificationDateTime', 'Event.User.Email'];
+              const allKeys = ['AuditInfo.JobMessageData.AddonData.AddonUUID','UUID','CreationDateTime', 'AuditInfo.JobMessageData.FunctionName', 'Event.User.Email','AuditInfo.JobMessageData.NumberOfTry','AuditInfo.JobMessageData.NumberOfTries'];
               tableData.push(this.convertTestToPepRowData(action, allKeys));
           });
           const pepperiListObj = this.dataConvertorService.convertListData(tableData);
@@ -162,21 +162,32 @@ export class PepperiHealthMonitorDashboardComponent implements OnInit {
       };
 
       switch (key) {
-
+          case 'AuditInfo.JobMessageData.AddonData.AddonUUID':
+            dataRowField.Title = "Addon Name";  
+            dataRowField.ColumnWidth = 10;
+            break;
           case 'UUID':
-            dataRowField.ColumnWidth = 30;
+            dataRowField.ColumnWidth = 10;
             break;
           case 'CreationDateTime':
             dataRowField.Title = "Creation Date Time";
-            dataRowField.ColumnWidth = 30;
+            dataRowField.ColumnWidth = 10;
             break;
-          case 'ModificationDateTime':
-            dataRowField.Title = "Modification Date Time";
-            dataRowField.ColumnWidth = 30;
+          case 'AuditInfo.JobMessageData.FunctionName':
+            dataRowField.Title = "Function Name";
+            dataRowField.ColumnWidth = 10;
             break;
           case 'Event.User.Email':
             dataRowField.Title = "User Email";
-            dataRowField.ColumnWidth = 30;
+            dataRowField.ColumnWidth = 10;
+            break;
+          case 'AuditInfo.JobMessageData.NumberOfTry':
+            dataRowField.Title = "User Email";
+            dataRowField.ColumnWidth = 10;
+            break;
+          case 'AuditInfo.JobMessageData.NumberOfTries':
+            dataRowField.Title = "User Email";
+            dataRowField.ColumnWidth = 10;
             break;
           default:
             dataRowField.ColumnWidth = 0;

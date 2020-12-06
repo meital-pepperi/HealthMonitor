@@ -216,21 +216,21 @@ export async function health_monitor_type_alert_save(client: Client, request: Re
             case "SYNC-FAILED":
                 codeJob = await GetCodeJob(service,"SYNC-FAILED");
                 additionalData.SyncFailed.Webhook = request.body.Webhook;
-                additionalData.SyncFailed.Email = request.body.Email;
+                //additionalData.SyncFailed.Email = request.body.Email;
                 lastInterval = additionalData.SyncFailed.Interval;
                 additionalData.SyncFailed.Interval = request.body.Interval;
                 break;
             case "JOB-LIMIT-REACHED":
                 codeJob = await GetCodeJob(service,"JOB-LIMIT-REACHED");
                 additionalData.JobLimitReached.Webhook = request.body.Webhook;
-                additionalData.JobLimitReached.Email = request.body.Email;
+                //additionalData.JobLimitReached.Email = request.body.Email;
                 lastInterval = additionalData.JobLimitReached.Interval;
                 additionalData.JobLimitReached.Interval = request.body.Interval;
                 break;
             case "JOB-EXECUTION-FAILED":
                 codeJob = await GetCodeJob(service,"JOB-EXECUTION-FAILED");
                 additionalData.JobExecutionFailed.Webhook = request.body.Webhook;
-                additionalData.JobExecutionFailed.Email = request.body.Email;
+                //additionalData.JobExecutionFailed.Email = request.body.Email;
                 lastInterval = additionalData.JobExecutionFailed.Interval;
                 additionalData.JobExecutionFailed.Interval = request.body.Interval;
                 break;
@@ -293,87 +293,73 @@ export async function health_monitor_dashboard(client: Client, request: Request)
         result.LastSync = {Time:time, Status:lastSyncResult[0]["Status.ID"]};
     
         const lastDay = new Date(Date.now() - 86400 * 1000);
-        const lastDayString = lastDay.toISOString();
-        const dailySuccessSyncResult = await service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName ='sync' and Status.ID=1 and ModificationDateTime>'"+lastDayString+"'&include_count=true&page_size=10000&order_by=ModificationDateTime asc");
-        const dailyFailureSyncResult = await service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName ='sync' and Status.ID=0 and ModificationDateTime>'"+lastDayString+"'&include_count=true&page_size=10000&order_by=ModificationDateTime asc");
-        result.SyncStatus = {Success:dailySuccessSyncResult.length, Failure:dailyFailureSyncResult.length};
-
-        
-        let successData = new Array();
-        let failureData = new Array();
         const firstHour = lastDay.getHours();
-        let labels = new Array();
+        let labelArray = new Array();
 
+        const listPromises: Promise<any>[] = [];
         let i = 0;
-        for (i=0; i<=24; i++){
+        let lowerRange = new Date(lastDay.setMinutes(0));
+        let upperRange = new Date(Date.parse(lowerRange.toISOString()) + 60*60*1000);
+        for (i=0; i<24; i++){
             const hour = ((firstHour+i)%24).toString();
-            labels.push(hour);
+            labelArray.push(hour);
+            listPromises.push(service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=1 and ModificationDateTime between '"+lowerRange.toISOString()+"' And '"+upperRange.toISOString()+"'&page_size=1000&order_by=ModificationDateTime asc")); //success
+            listPromises.push(service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=0 and ModificationDateTime between '"+lowerRange.toISOString()+"' And '"+upperRange.toISOString()+"'&page_size=1000&order_by=ModificationDateTime asc")); //failure
+            lowerRange = new Date(Date.parse(lowerRange.toISOString()) + 60*60*1000);
+            upperRange = new Date(Date.parse(upperRange.toISOString()) + 60*60*1000);
         }
 
-        let success =0;
-        let label = 0;
-        for (i=0; i<dailySuccessSyncResult.length; i++){
-            const hour = new Date(dailySuccessSyncResult[i]["ModificationDateTime"]).getHours().toString();
-            if (hour == labels[label]){
-                success = success +1;
-            }
-            else{
-                successData.push(success);
-                success =0;
-                i= i-1;
-                label = label+1;
-            }
-        }
-        successData.push(success);
-        label = label+1;
-        if (label<24){
-            while (label<=24){
-                successData.push(0);
-                label = label+1;
-            }
-        }
-
-        let failure =0;
-        label = 0;
-        for (i=0; i<dailyFailureSyncResult.length; i++){
-            const hour = new Date(dailyFailureSyncResult[i]["ModificationDateTime"]).getHours().toString();
-            if (hour == labels[label]){
-                failure = failure +1;
-            }
-            else{
-                failureData.push(failure);
-                failure =0;
-                i= i-1;
-                label = label+1;
-            }
-        }
-        failureData.push(failure);
-        label = label+1;
-        if (label<24){
-            while (label<=24){
-                failureData.push(0);
-                label = label+1;
-            }
-        }
-
-        //fix UI of labels
-        for (var j in labels){
-            if (labels[j].length==1){
-                labels[j]= "0"+labels[j]+":00"
-            }
-            else{
-                labels[j]= labels[j]+":00"
-            }
-        }
-
-        result.DailySync = {Labels: labels , Success: successData, Failure: failureData};
+        await Promise.all(listPromises).then(
+            function(res){
+                let successCount = 0;
+                let failureCount = 0;
+                let successArray = new Array();
+                let failureArray = new Array();
+                i = 0;
+                while (i<res.length){
+                    successCount =successCount+ res[i].length;
+                    failureCount =failureCount+ res[i+1].length;
+                    successArray.push(res[i].length);
+                    failureArray.push(res[i+1].length);
+                    i=i+2;
+                }
+                result.SyncStatus = {Success:successCount, Failure:failureCount};
+                result.DailySync = {Labels: labelArray , Success: successArray, Failure: failureArray};
+              }
+        );
     
+        const addons = await service.papiClient.get('/addons?page_size=-1');
+
         //there are logs stuck on in progress, maybe show one month back
-        const today = new Date(Date.now());
-        const lastMonth = new Date(today.setMonth(today.getMonth()-1));
-        const lastMonthString = lastMonth.toISOString();
-        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=UUID,CreationDateTime,ModificationDateTime,Event.User.Email&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=2 and ModificationDateTime>'"+lastMonthString+"'&page_size=1000&order_by=ModificationDateTime desc");
-        result.PendingActions = {Count: pendingActionsResult.length, List: JSON.stringify(pendingActionsResult)};
+        const lastWeek = new Date(Date.now()-  7*24*60*60*1000);
+        const lastWeekString = lastWeek.toISOString();
+        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=UUID,CreationDateTime,AuditInfo.JobMessageData.FunctionName,Event.User.Email,AuditInfo.JobMessageData.NumberOfTry,AuditInfo.JobMessageData.NumberOfTries,AuditInfo.JobMessageData.AddonData.AddonUUID&where=Status.ID=2 and CreationDateTime>'"+lastWeekString+"'&page_size=1000&order_by=CreationDateTime desc");
+        let pendingActionsValidateResult = new Array();
+        for (var j in pendingActionsResult){
+            if (pendingActionsResult[j]["AuditInfo.JobMessageData.FunctionName"]==undefined || pendingActionsResult[j]["AuditInfo.JobMessageData.AddonData.AddonUUID"]==undefined){
+                continue;
+            }
+            let addonUUID =pendingActionsResult[j]["AuditInfo.JobMessageData.AddonData.AddonUUID"];            
+
+            //prepare the data format for the UI
+            if (addons.filter(x=> x.UUID==addonUUID).length==1){
+                if (addons.filter(x=> x.UUID==addonUUID)[0].Name=='HealthMonitor'){
+                    continue;
+                }
+                pendingActionsResult[j]["AuditInfo.JobMessageData.AddonData.AddonUUID"] = addons.filter(x=> x.UUID==addonUUID)[0].Name;
+            }
+            else{
+                continue;
+            }
+
+            let email = pendingActionsResult[j]["Event.User.Email"].toString();
+            if (email.startsWith("SupportAdminUser")){
+                pendingActionsResult[j]["Event.User.Email"] = "Pepperi Admin";
+            }
+            pendingActionsResult[j]["CreationDateTime"] = new Date(pendingActionsResult[j]["CreationDateTime"]).toLocaleString();
+            pendingActionsValidateResult.push(pendingActionsResult[j]);
+        }
+        result.PendingActions = {Count: pendingActionsValidateResult.length, List: JSON.stringify(pendingActionsValidateResult)};
     
         const jobTimeUsageResult = await service.papiClient.get('/code_jobs/execution_budget');
         const currentPercantage = parseFloat((jobTimeUsageResult.UsedBudget/(jobTimeUsageResult.UsedBudget +jobTimeUsageResult.FreeBudget)).toFixed(2));
@@ -672,13 +658,14 @@ export async function JobExecutionFailedTest(service) {
     let report;
 
     try {
-        let addon = await service.papiClient.addons.installedAddons.addonUUID(service.client.AddonUUID).get();
+        const addonUUID = service.client.AddonUUID;
+        let addon = await service.papiClient.addons.installedAddons.addonUUID(addonUUID).get();
         let additionalData = JSON.parse(addon.AdditionalData);
         const interval = additionalData.JobExecutionFailed.Interval;
         const intervalDate = new Date(Date.now() - interval).toISOString();
         const intervalUTCDate = new Date(Date.now() - interval).toUTCString();
         const auditLogsResult = await service.papiClient.get("/audit_logs?where=AuditInfo.JobMessageData.IsScheduled=true and Status.ID=0 and ModificationDateTime>'"+intervalDate+"' and AuditInfo.JobMessageData.FunctionName!='monitor' and AuditInfo.JobMessageData.FunctionName!='sync_failed'&order_by=ModificationDateTime desc");
-        //addonuuid not main 
+        const addons = await service.papiClient.get('/addons?page_size=500');
 
         if (auditLogsResult.length==0){
             report= "No new errors were found since " + intervalUTCDate + ".";
@@ -687,11 +674,17 @@ export async function JobExecutionFailedTest(service) {
         else {
             report = new Array();
             for (var auditLog in auditLogsResult) {
+                if (auditLogsResult[auditLog].AuditInfo.JobMessageData.AddonData==undefined){
+                    continue;
+                }
+
+                const addonName = addons.filter(x=> x.UUID==auditLogsResult[auditLog].AuditInfo.JobMessageData.AddonData.AddonUUID)[0].Name;
                 report.push({
-                    "ModificationDateTime":auditLogsResult[auditLog].ModificationDateTime,
+                    "CreationDateTime":auditLogsResult[auditLog].CreationDateTime,
                     "CodeJobName":auditLogsResult[auditLog].AuditInfo.JobMessageData.CodeJobName,
+                    "NumberOfTry":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTry,
                     "NumberOfTries":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTries,
-                    "AddonUUID": auditLogsResult[auditLog].AuditInfo.JobMessageData.AddonData.AddonUUID, //name
+                    "AddonName": addonName, 
                     "FunctionName": auditLogsResult[auditLog].AuditInfo.JobMessageData.FunctionName,
                     "ErrorMessage": auditLogsResult[auditLog].AuditInfo.ErrorMessage,
                 });
@@ -703,7 +696,7 @@ export async function JobExecutionFailedTest(service) {
         console.log("HealthMonitorAddon, JobExecutionFailedTest finish");
         return {
             success:true, 
-            resultObject:report
+            resultObject:JSON.stringify(report)
         };
     }
     catch (err) {
@@ -947,7 +940,19 @@ async function CheckMaintenanceWindow(service, papiClient) {
         
         const maintenance = await service.papiClient.metaData.flags.name('Maintenance').get();
         const maintenanceWindowHour = parseInt(maintenance.MaintenanceWindow.split(':')[0]);
-        const updatedCronExpression = await GetCronExpression(service.client.OAuthAccessToken, maintenanceWindowHour);
+        let addon = await papiClient.addons.installedAddons.addonUUID(service.client.AddonUUID).get();
+        let additionalData = addon.AdditionalData? JSON.parse(addon.AdditionalData):{};
+        const seconds = additionalData.SyncFailed.Interval/1000;
+        const minutes = seconds/60;
+        const hours = minutes/60;
+        let updatedCronExpression;
+
+        if (hours>1){
+            updatedCronExpression = await GetCronExpression(service.client.OAuthAccessToken, maintenanceWindowHour, false, true, hours);
+        }
+        else{
+            updatedCronExpression = await GetCronExpression(service.client.OAuthAccessToken, maintenanceWindowHour, true, false, minutes ); 
+        }
 
         const codeJob = await GetCodeJob(service,"SYNC-FAILED");
         const previosCronExpression = codeJob.CronExpression;
@@ -1030,8 +1035,13 @@ async function GetCronExpression(token, maintenanceWindowHour, minutes=true, hou
         const rand = (jwtDecode(token)['pepperi.distributorid'])%60;
         minute = rand +"-59/60";
         
-        let i = dailyTime%24;
-        while (i<23){
+        let i = dailyTime;
+        while (i>=interval){
+            i=i-interval;
+        }
+        hour =i.toString();
+        i=i+interval;
+        while (i<24){
             hour = hour + "," +i;
             i=i+interval;
         }

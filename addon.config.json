@@ -1,6 +1,6 @@
 {
   "AddonUUID": "7e15d4cc-55a7-4128-a9fe-0e877ba90069",
-  "AddonVersion": "0.0.22",
+  "AddonVersion": "0.0.29",
   "DebugPort": 4400,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "main",
@@ -17,6 +17,7 @@
     "he.json"
   ],
   "PublishConfig": {
+    "ClientStack": "ng10",
     "Editors": [
       {
         "ParentPackageName": "Health Monitor",
@@ -30,7 +31,8 @@
       }
     ],
     "Dependencies": {
-      "webapp": "16.55.42"
+      "webapp": "16.55.42",
+      "papi": "9.5.349"
     }
   }
 }
