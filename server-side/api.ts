@@ -300,13 +300,23 @@ export async function health_monitor_dashboard(client: Client, request: Request)
         let i = 0;
         let lowerRange = new Date(lastDay.setMinutes(0));
         let upperRange = new Date(Date.parse(lowerRange.toISOString()) + 60*60*1000);
-        for (i=0; i<24; i++){
+        for (i=0; i<=24; i++){
             const hour = ((firstHour+i)%24).toString();
             labelArray.push(hour);
             listPromises.push(service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=1 and ModificationDateTime between '"+lowerRange.toISOString()+"' And '"+upperRange.toISOString()+"'&page_size=1000&order_by=ModificationDateTime asc")); //success
             listPromises.push(service.papiClient.get("/audit_logs?fields=ModificationDateTime&where=AuditInfo.JobMessageData.FunctionName='sync' and Status.ID=0 and ModificationDateTime between '"+lowerRange.toISOString()+"' And '"+upperRange.toISOString()+"'&page_size=1000&order_by=ModificationDateTime asc")); //failure
             lowerRange = new Date(Date.parse(lowerRange.toISOString()) + 60*60*1000);
             upperRange = new Date(Date.parse(upperRange.toISOString()) + 60*60*1000);
+        }
+
+        //fix UI of labels
+        for (var j in labelArray){
+            if (labelArray[j].length==1){
+                labelArray[j]= "0"+labelArray[j]+":00"
+            }
+            else{
+                labelArray[j]= labelArray[j]+":00"
+            }
         }
 
         await Promise.all(listPromises).then(
@@ -333,7 +343,7 @@ export async function health_monitor_dashboard(client: Client, request: Request)
         //there are logs stuck on in progress, maybe show one month back
         const lastWeek = new Date(Date.now()-  7*24*60*60*1000);
         const lastWeekString = lastWeek.toISOString();
-        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=UUID,CreationDateTime,AuditInfo.JobMessageData.FunctionName,Event.User.Email,AuditInfo.JobMessageData.NumberOfTry,AuditInfo.JobMessageData.NumberOfTries,AuditInfo.JobMessageData.AddonData.AddonUUID&where=Status.ID=2 and CreationDateTime>'"+lastWeekString+"'&page_size=1000&order_by=CreationDateTime desc");
+        const pendingActionsResult = await service.papiClient.get("/audit_logs?fields=UUID,CreationDateTime,AuditInfo.JobMessageData.FunctionName,Event.User.Email,AuditInfo.JobMessageData.NumberOfTry,AuditInfo.JobMessageData.NumberOfTries,AuditInfo.JobMessageData.AddonData.AddonUUID,Status.Name&where=Status.ID!=0 and Status.ID!=1 and CreationDateTime>'"+lastWeekString+"'&page_size=1000&order_by=CreationDateTime desc");
         let pendingActionsValidateResult = new Array();
         for (var j in pendingActionsResult){
             if (pendingActionsResult[j]["AuditInfo.JobMessageData.FunctionName"]==undefined || pendingActionsResult[j]["AuditInfo.JobMessageData.AddonData.AddonUUID"]==undefined){
@@ -357,6 +367,8 @@ export async function health_monitor_dashboard(client: Client, request: Request)
                 pendingActionsResult[j]["Event.User.Email"] = "Pepperi Admin";
             }
             pendingActionsResult[j]["CreationDateTime"] = new Date(pendingActionsResult[j]["CreationDateTime"]).toLocaleString();
+
+            pendingActionsResult[j]["AuditInfo.JobMessageData.NumberOfTry"] = pendingActionsResult[j]["AuditInfo.JobMessageData.NumberOfTry"]+"/"+pendingActionsResult[j]["AuditInfo.JobMessageData.NumberOfTries"];
             pendingActionsValidateResult.push(pendingActionsResult[j]);
         }
         result.PendingActions = {Count: pendingActionsValidateResult.length, List: JSON.stringify(pendingActionsValidateResult)};
@@ -1027,7 +1039,7 @@ async function GetCronExpression(token, maintenanceWindowHour, minutes=true, hou
                 hour = "1-21";
                 break;
             default:
-                hour = "0-"+(maintenanceWindowHour-1)+','+(maintenanceWindowHour+1)+"-23";
+                hour = "0-"+(maintenanceWindowHour-2)+','+(maintenanceWindowHour+2)+"-23";
         }
     }
     else if (hours){
