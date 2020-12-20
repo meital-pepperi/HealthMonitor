@@ -374,8 +374,13 @@ export async function health_monitor_dashboard(client: Client, request: Request)
         result.PendingActions = {Count: pendingActionsValidateResult.length, List: JSON.stringify(pendingActionsValidateResult)};
     
         const jobTimeUsageResult = await service.papiClient.get('/code_jobs/execution_budget');
-        const currentPercantage = parseFloat((jobTimeUsageResult.UsedBudget/(jobTimeUsageResult.UsedBudget +jobTimeUsageResult.FreeBudget)).toFixed(2));
-        result.JobTimeUsage = {Percantage: currentPercantage };
+        if ((jobTimeUsageResult.UsedBudget +jobTimeUsageResult.FreeBudget)==0){
+            result.JobTimeUsage = {Percantage: 100 };
+        }
+        else{
+            const currentPercantage = parseFloat(((jobTimeUsageResult.UsedBudget/(jobTimeUsageResult.UsedBudget +jobTimeUsageResult.FreeBudget))*100).toFixed(2));
+            result.JobTimeUsage = {Percantage: currentPercantage };
+        }
     
         return result;
     }
@@ -615,30 +620,28 @@ export async function JobLimitReachedTest(service) {
         const additionalData = JSON.parse(addon.AdditionalData);
         lastPercantage = additionalData.JobLimitReached.LastPercantage;
 
-        currentPercantage = parseFloat((result.UsedBudget/(result.UsedBudget +result.FreeBudget)).toFixed(2));
+        currentPercantage = parseFloat(((result.UsedBudget/(result.UsedBudget +result.FreeBudget))*100).toFixed(2));
         innerMessage ="You have reached " + currentPercantage +"% of your job limits.";
-        switch (currentPercantage){
-            case 80-90:
-                if (lastPercantage<80){
-                    ReportError(service, await GetDistributor(service), "PASSED-JOB-LIMIT", "JOB-LIMIT-REACHED", innerMessage );
-                    reportSent = true;
-                }
-                break;
-            case 90-95:
-                if (lastPercantage<90){
-                    ReportError(service, await GetDistributor(service), "PASSED-JOB-LIMIT", "JOB-LIMIT-REACHED", innerMessage );
-                    reportSent = true;
-                }
-                break;
-            case 95-100:
-                if (lastPercantage<95){
-                    ReportError(service, await GetDistributor(service), "PASSED-JOB-LIMIT", "JOB-LIMIT-REACHED", innerMessage );
-                    reportSent = true;
-                }
-                break;
-            default:
-                break;
+
+        if (currentPercantage>=80 && currentPercantage<90){
+            if (lastPercantage<80){
+                ReportError(service, await GetDistributor(service), "PASSED-JOB-LIMIT", "JOB-LIMIT-REACHED", innerMessage );
+                reportSent = true;
+            }
         }
+        else if (currentPercantage>=90 && currentPercantage<95){
+            if (lastPercantage<90){
+                ReportError(service, await GetDistributor(service), "PASSED-JOB-LIMIT", "JOB-LIMIT-REACHED", innerMessage );
+                reportSent = true;
+            }
+        }
+        else if (currentPercantage>=95){
+            if (lastPercantage<95){
+                ReportError(service, await GetDistributor(service), "PASSED-JOB-LIMIT", "JOB-LIMIT-REACHED", innerMessage );
+                reportSent = true;
+            }
+        }
+
         if (!reportSent){
             ReportErrorCloudWatch(await GetDistributor(service), "JOB-LIMIT-SUCCESS", "JOB-LIMIT-REACHED", innerMessage );
         }
@@ -682,28 +685,52 @@ export async function JobExecutionFailedTest(service) {
         if (auditLogsResult.length==0){
             report= "No new errors were found since " + intervalUTCDate + ".";
             ReportErrorCloudWatch(await GetDistributor(service), "jOB-EXECUTION-REPORT", "jOB-EXECUTION-FAILED", innerMessage);
+            console.log("HealthMonitorAddon, JobExecutionFailedTest finish");
+            return {
+                success:true, 
+                resultObject:report
+            };
         }
         else {
             report = new Array();
             for (var auditLog in auditLogsResult) {
                 if (auditLogsResult[auditLog].AuditInfo.JobMessageData.AddonData==undefined){
-                    continue;
+                    report.push({
+                        "CreationDateTime":auditLogsResult[auditLog].CreationDateTime,
+                        "CodeJobName":auditLogsResult[auditLog].AuditInfo.JobMessageData.CodeJobName,
+                        "NumberOfTry":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTry,
+                        "NumberOfTries":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTries,
+                        "FunctionName": auditLogsResult[auditLog].AuditInfo.JobMessageData.FunctionName,
+                        "ErrorMessage": auditLogsResult[auditLog].AuditInfo.ErrorMessage,
+                    });
                 }
-
-                const addonName = addons.filter(x=> x.UUID==auditLogsResult[auditLog].AuditInfo.JobMessageData.AddonData.AddonUUID)[0].Name;
-                report.push({
-                    "CreationDateTime":auditLogsResult[auditLog].CreationDateTime,
-                    "CodeJobName":auditLogsResult[auditLog].AuditInfo.JobMessageData.CodeJobName,
-                    "NumberOfTry":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTry,
-                    "NumberOfTries":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTries,
-                    "AddonName": addonName, 
-                    "FunctionName": auditLogsResult[auditLog].AuditInfo.JobMessageData.FunctionName,
-                    "ErrorMessage": auditLogsResult[auditLog].AuditInfo.ErrorMessage,
-                });
+                else{
+                    const addonName = addons.filter(x=> x.UUID==auditLogsResult[auditLog].AuditInfo.JobMessageData.AddonData.AddonUUID)[0].Name;
+                    report.push({
+                        "CreationDateTime":auditLogsResult[auditLog].CreationDateTime,
+                        "CodeJobName":auditLogsResult[auditLog].AuditInfo.JobMessageData.CodeJobName,
+                        "NumberOfTry":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTry,
+                        "NumberOfTries":auditLogsResult[auditLog].AuditInfo.JobMessageData.NumberOfTries,
+                        "AddonName": addonName, 
+                        "FunctionName": auditLogsResult[auditLog].AuditInfo.JobMessageData.FunctionName,
+                        "ErrorMessage": auditLogsResult[auditLog].AuditInfo.ErrorMessage,
+                    });
+                }
             }
+
+            if (report.length==0){
+                const reportMessage= "No new errors were found since " + intervalUTCDate + ".";
+                ReportErrorCloudWatch(await GetDistributor(service), "jOB-EXECUTION-REPORT", "jOB-EXECUTION-FAILED", innerMessage);
+                console.log("HealthMonitorAddon, JobExecutionFailedTest finish");
+                return {
+                    success:true, 
+                    resultObject:reportMessage
+                };
+            }
+
             innerMessage =JSON.stringify(report);
             ReportError(service, await GetDistributor(service), "jOB-EXECUTION-REPORT", "jOB-EXECUTION-FAILED", innerMessage);
-        }    
+        }
 
         console.log("HealthMonitorAddon, JobExecutionFailedTest finish");
         return {

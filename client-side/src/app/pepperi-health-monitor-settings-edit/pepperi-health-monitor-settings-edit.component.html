@@ -20,14 +20,14 @@
             </div>
         </div>
         <div class="main-content ">
-            <div class="content" style="width: 50%;">
+            <div class="content" style="width: 50%;" [ngStyle]="{ visibility: typeData ? 'visible':'hidden'}">
 <!--                 <pep-textbox [key]="'Email'" [label]="'Send email to'" [placeholder]="'place holder'" [xAlignment]="'left'"
                     [value]="typeData.Email" (valueChanged)="onValueChanged($event)">
                 </pep-textbox> -->
                 <pep-textbox [key]="'Webhook'" [label]="'Call webhook'" [placeholder]="'place holder'" [xAlignment]="'left'"
-                    [value]="typeData.Webhook" (valueChange)="onValueChanged($event)">
+                    [value]="typeData?.Webhook" [formattedValue]="typeData?.Webhook" (valueChange)="onValueChanged($event)">
                 </pep-textbox>
-                <pep-select  *ngIf="isSupport" [key]="'Interval'" [label]="'Check interval'" [value]="typeData.Interval" [xAlignment]="'left'"
+                <pep-select [emptyOption]="false" *ngIf="isSupport" [key]="'Interval'" [label]="'Check interval'" [value]="typeData.Interval" [xAlignment]="'left'"
                     [options]='[
                     { "Key": 300000, "Value": "5 minutes" },
                     { "Key": 600000, "Value": "10 minutes" },

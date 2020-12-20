@@ -4,6 +4,8 @@ import { CustomizationService, HttpService, ObjectSingleData, DataConvertorServi
     PepRowData, PepFieldData, AddonService, FIELD_TYPE, UtilitiesService } from '@pepperi-addons/ngx-lib';
 import { PepListComponent, ChangeSortingEvent } from '@pepperi-addons/ngx-lib/list';
 import { AppService } from "../app.service";
+import {DialogService,PepDialogActionButton} from "@pepperi-addons/ngx-lib/dialog";
+import { PepDialogData } from "@pepperi-addons/ngx-lib/dialog";
 
 @Component({
   selector: 'app-pepperi-health-monitor-settings',
@@ -29,29 +31,14 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
       private dataConvertorService: DataConvertorService,
       private httpService: HttpService,
       private addonService: AddonService,
-      private appService: AppService
+      private appService: AppService,
+      private dialogService: DialogService
   ) {
 
       const browserCultureLang = translate.getBrowserCultureLang();
   }
 
   ngOnInit() {
-      
-      // this.httpService.getHttpCall('http://get_data')
-      //     .subscribe(
-      //         (res) => {
-      //             debugger;
-      //             console.log('')
-      //         },
-      //         (error) => {
-      //             debugger;
-      //             console.log(error);
-      //         },
-      //         () => {
-      //             debugger;
-      //         }
-      // );
-
   }
 
   onMenuItemClicked(action) {
@@ -67,9 +54,29 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
         .subscribe((result: any) => {
         const popupMessage = result;
         const eventName = action.value;
-        this.appService.openDialog("Info",popupMessage);
+        this.openDialog("Info",popupMessage);
       });
     }
+  }
+
+  openDialog(title: string, content: string, callback?: any) {
+    const actionButton: PepDialogActionButton = {
+      title: "OK",
+      className: "",
+      callback: callback,
+    };
+ 
+    const dialogData = new PepDialogData({
+      title: title,
+      content: content,
+      actionButtons: [actionButton],
+      type: "custom",
+    });
+    this.dialogService
+      .openDefaultDialog(dialogData)
+      .afterClosed()
+      .subscribe((callback) => {
+      });
   }
 
   ngAfterViewInit() {
@@ -153,7 +160,6 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
   onCustomizeFieldClick(event) {
   }
 
-
   selectedRowsChanged(selectedRowsCount) {
     if (selectedRowsCount==0){
       this.disableActions=true;
@@ -162,4 +168,5 @@ export class PepperiHealthMonitorSettingsComponent implements OnInit {
       this.disableActions=false;
     }
   }
+
 }

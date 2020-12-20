@@ -22,7 +22,7 @@
                             <div class="content row">
                                 <div class="info-chart chart-background">
                                     <p class="desc color-dimmed">Last Sync - {{ dashboardData?.LastSync?.StatusName}}</p>
-                                    <p class="value bold" >{{dashboardData?.LastSync?.Time}} </p>
+                                    <p class="value bold" >{{dashboardData?.LastSync?.Time}} UTC </p>
                                 </div>
                 
                                 <div class="info-chart chart-background">
@@ -41,7 +41,7 @@
                                     <canvas #syncStatus id="syncStatus"></canvas>
                                 </div>
                                 <div class="chart chart-background">
-                                    <p class="pep-border-bottom">Daily Sync</p>
+                                    <p class="pep-border-bottom">Daily Sync (UTC)</p>
                                     <canvas #dailySync id="dailySync"></canvas>
                                 </div>
                             </div>
