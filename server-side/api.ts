@@ -13,7 +13,7 @@ const sleep = (milliseconds) => {
 };
 const errors = {
     "SYNC-SUCCESS":{"Message":'SyncFailed test succeeded', "Color":"00FF00"},
-    "JOB-EXECUTION-REPORT":{"Message":'JobExecutionFailed test finished', "Color":"00FF00"},
+    "JOB-EXECUTION-REPORT":{"Message":'JobExecutionFailed test finished', "Color":"990000"},
     "JOB-LIMIT-SUCCESS":{"Message":'JobLimitReached test finished', "Color":"00FF00"},
     "TEST-MESSAGE":{"Message":'test message', "Color":"00FF00"},
     "UNKNOWN-ERROR":{"Message":'Unknown error occured, contact rnd to fix this', "Color":"990000"},
@@ -734,7 +734,7 @@ export async function JobExecutionFailedTest(service) {
 
         console.log("HealthMonitorAddon, JobExecutionFailedTest finish");
         return {
-            success:true, 
+            success:false, 
             resultObject:JSON.stringify(report)
         };
     }
