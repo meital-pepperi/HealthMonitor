@@ -296,8 +296,9 @@ async function InstallSyncFailed(client, papiClient){
         MainKeyType: {ID:0, Name:"Any"},
         SecondaryKeyType:{ID:0,Name:"Any"},
         Hidden : false,
-        Owner: {
-            UUID: client.AddonUUID
+        MemoryMode: {
+            Dormant: false,
+            Volatile: false
         }
     };
     const mapData ={

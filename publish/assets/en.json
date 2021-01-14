@@ -1,8 +1,6 @@
 {
-    "Components_Example_Title": "@pep-addons/ngx-lib : Pepperi Components - Library components written with Angular10",
-    "List_Example_Title": "Pep list example",
     "Health_Monitor_Settings_Title": "Health Monitor Settings",
-    "Health_Monitor_Settings_Description":"Define the alert settings",
+    "Health_Monitor_Settings_Description":"Define a Webhook for notification to a MS Teams Channel that will be triggered when one of the job failure types occur.",
     "Health_Monitor_Settings_Alerts":"Alerts",
     "Health_Monitor_Dashboard_Title": "Health Monitor Dashboard",
     "Health_Monitor_Dashboard_Tab1": "Dashboard",
