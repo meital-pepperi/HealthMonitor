@@ -449,6 +449,9 @@ export async function SyncFailedTest(service) {
     let start;
     let end;
 
+    const additionalData = await GetAdditionalData(service);
+    let mapDataID = additionalData.SyncFailed.MapDataID;
+
     //first udt
     try{ 
         console.log('HealthMonitorAddon, SyncFailedTest start first GET udt');
@@ -457,7 +460,7 @@ export async function SyncFailedTest(service) {
             await StatusUpdate(service, false, false, 'TIMEOUT-GET-UDT');
             },30000);
         start = Date.now();
-        udtResponse = await service.papiClient.userDefinedTables.iter({ where: "MapDataExternalID='PepperiHealthMonitor'" }).toArray();
+        udtResponse = await service.papiClient.get('/user_defined_tables/' + mapDataID);
         end = Date.now();
         clearTimeout(timeout);
         console.log('HealthMonitorAddon, SyncFailedTest finish first GET udt took '+(end-start)+' milliseconds',);
@@ -470,9 +473,8 @@ export async function SyncFailedTest(service) {
     }
 
     //update values field
-    object = udtResponse[0];
-    const count = (parseInt(object.Values[0]) + 1).toString();
-    object.Values[0] = count;
+    const count = (parseInt(udtResponse.Values[0]) + 1).toString();
+    udtResponse.Values[0] = count;
 
     const LocalData = {
         "jsonBody": {
@@ -484,9 +486,9 @@ export async function SyncFailedTest(service) {
                 ],
                 "Lines": [
                     [
-                        object.InternalID,
-                        object.MapDataExternalID,
-                        object.Values
+                        udtResponse.InternalID,
+                        udtResponse.MapDataExternalID,
+                        udtResponse.Values
                     ]
                 ]
             }
@@ -548,7 +550,7 @@ export async function SyncFailedTest(service) {
                 //await StatusUpdate(service, false, false, 'TIMEOUT-GET-UDT');
                 },30000);
             start = Date.now();
-            udtResponse = await service.papiClient.userDefinedTables.iter({ where: "MapDataExternalID='PepperiHealthMonitor'" }).toArray();
+            udtResponse = await service.papiClient.get('/user_defined_tables/' + mapDataID);
             end = Date.now();
             clearTimeout(timeout);
             console.log('HealthMonitorAddon, SyncFailedTest finish second GET udt took '+(end-start)+' milliseconds');
@@ -560,7 +562,7 @@ export async function SyncFailedTest(service) {
             clearTimeout(timeout);
         }
         
-        if (udtResponse[0].Values[0] == count) {
+        if (udtResponse.Values[0] == count) {
             return 'SYNC-SUCCESS';
         }
         else {

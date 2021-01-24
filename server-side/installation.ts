@@ -29,44 +29,45 @@ exports.install = async (client: Client, request: Request) => {
         });
 
         // install SyncFailed test
-        let retVal = await InstallSyncFailed(client, papiClient);
-        successSyncFailed = retVal.success;
-        errorMessage = "SyncFailed Test installation failed on: " + retVal.errorMessage;
+        
+        let retValSyncFailed = await InstallSyncFailed(client, papiClient);
+        successSyncFailed = retValSyncFailed.success;
+        errorMessage = "SyncFailed Test installation failed on: " + retValSyncFailed.errorMessage;
         if (!successSyncFailed){
             console.error(errorMessage);
-            return retVal;
+            return retValSyncFailed;
         }
+        let mapDataID=retValSyncFailed["mapDataID"];
         console.log('SyncFailed codejob installed succeeded.');
 
-
         // install JobLimitReached test
-        retVal = await InstallJobLimitReached(client, papiClient);
-        successJobLimitReached = retVal.success;
-        errorMessage = "JobLimitReached Test installation failed on: " + retVal.errorMessage;
+        let retValJobLimitReached = await InstallJobLimitReached(client, papiClient);
+        successJobLimitReached = retValJobLimitReached.success;
+        errorMessage = "JobLimitReached Test installation failed on: " + retValJobLimitReached.errorMessage;
         if (!successJobLimitReached){
             console.error(errorMessage);
-            return retVal;
+            return retValJobLimitReached;
         }
         console.log('JobLimitReached codejob installed succeeded.');
 
         // install AddonLimitReached test
-        retVal = await InstallAddonLimitReached(client, papiClient);
-        successAddonLimitReached = retVal.success;
-        errorMessage = "AddonLimitReached Test installation failed on: " + retVal.errorMessage;
+        let retValAddonLimitReached = await InstallAddonLimitReached(client, papiClient);
+        successAddonLimitReached = retValAddonLimitReached.success;
+        errorMessage = "AddonLimitReached Test installation failed on: " + retValAddonLimitReached.errorMessage;
         if (!successAddonLimitReached){
             console.error(errorMessage);
-            return retVal;
+            return retValAddonLimitReached;
         }
         console.log('AddonLimitReached codejob installed succeeded.');
 
 
         // install JobExecutionFailed test
-        retVal = await InstallJobExecutionFailed(client, papiClient);
-        successJobExecutionFailed = retVal.success;
-        errorMessage = "JobExecutionFailed Test installation failed on: " + retVal.errorMessage;
+        let retValJobExecutionFailed = await InstallJobExecutionFailed(client, papiClient);
+        successJobExecutionFailed = retValJobExecutionFailed.success;
+        errorMessage = "JobExecutionFailed Test installation failed on: " + retValJobExecutionFailed.errorMessage;
         if (!successJobExecutionFailed){
             console.error(errorMessage);
-            return retVal;
+            return retValJobExecutionFailed;
         }
         console.log('JobExecutionFailed codejob installed succeeded.');
         
@@ -77,7 +78,7 @@ exports.install = async (client: Client, request: Request) => {
         const distributor = await GetDistributor(papiClient);
         data.Name = distributor.Name;
         data.MachineAndPort = distributor.MachineAndPort;
-        data.SyncFailed = { Type:"Sync failed", Status: true, ErrorCounter:0, Email:"", Webhook:"",Interval:5*60*1000 };
+        data.SyncFailed = { Type:"Sync failed", Status: true, ErrorCounter:0, MapDataID:mapDataID, Email:"", Webhook:"",Interval:5*60*1000 };
         data.JobLimitReached = {Type:"Job limit reached", LastPercantage:0, Email:"", Webhook:"",Interval:24*60*60*1000};
         data.JobExecutionFailed = {Type:"Job execution failed", Email:"", Webhook:"",Interval:24*60*60*1000};
 
@@ -181,6 +182,18 @@ exports.upgrade = async (client: Client, request: Request) => {
         token: client.OAuthAccessToken,
         addonUUID: client.AddonUUID
     });
+
+    // add to AdditionalData data.SyncFailed.MapDataID - from version 1.0.56
+    let addon = await papiClient.addons.installedAddons.addonUUID(client.AddonUUID).get();
+    const additionalData = addon.AdditionalData? addon.AdditionalData : "";
+    let data = JSON.parse(additionalData);
+    if (!data.SyncFailed.MapDataID){
+        const udtResponse = await papiClient.userDefinedTables.iter({ where: "MapDataExternalID='PepperiHealthMonitor'" }).toArray();
+        data.SyncFailed.MapDataID = udtResponse[0].InternalID;
+        addon.AdditionalData = JSON.stringify(data);
+        const response = await papiClient.addons.installedAddons.upsert(addon);
+    }
+    ////
 
     console.log('HealthMonitorAddon upgrade succeeded.');
     return {
@@ -315,6 +328,7 @@ async function InstallSyncFailed(client, papiClient){
     const maintenanceWindowHour = parseInt(maintenance.MaintenanceWindow.split(':')[0]);
     let codeJob = await CreateAddonCodeJob(client, papiClient, "SyncFailed Test", "SyncFailed Test for HealthMonitor Addon.", "api", "sync_failed", GetMonitorCronExpression(client.OAuthAccessToken, maintenanceWindowHour));
     let retVal = await UpdateCodeJobUUID(papiClient, client.AddonUUID, codeJob.UUID, 'SyncFailedCodeJobUUID');
+    retVal["mapDataID"]=resultAddUDTRow.InternalID;
     return retVal;
 }
 
