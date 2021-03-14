@@ -593,6 +593,7 @@ export async function AddonLimitReachedTest(service) {
                 }
             }
         }
+        
         console.log("HealthMonitorAddon, AddonLimitReachedTest finish check addons execution limit");
         console.log(JSON.stringify(resultItems));
         return {
